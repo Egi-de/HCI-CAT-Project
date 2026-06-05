@@ -1,0 +1,46 @@
+# Django / Python
+*.py[cod]
+__pycache__/
+*.so
+*.egg-info/
+*.egg
+.dist/
+.build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables / secrets
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Cache
+.cache/
+.mypy_cache/
+.pytest_cache/
+
+# Misc
+.coverage
+coverage.xml
+htmlcov/
+
+# If you have a lockfile you don’t want committed, uncomment:
+# Pipfile.lock
+
