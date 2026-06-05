@@ -623,7 +623,8 @@
         <div class="nav-links">
             <a href="#search">Search</a>
             <a href="#features">Features</a>
-            <a href="/admin/" class="btn-admin">Admin Portal →</a>
+            <a href="{% url 'admin-login' %}" class="btn-admin">Admin Portal →</a>
+
         </div>
     </nav>
 
@@ -685,9 +686,10 @@
                     <div class="coords" id="r-coords"></div>
                 </div>
                 <div class="res-icon-wrap">
-                    <img class="res-icon" id="r-icon" src="" alt="" />
+                    <img class="res-icon" id="r-icon" src="" alt="Weather icon" style="display:none" />
                     <div class="res-cond" id="r-cond"></div>
                 </div>
+
             </div>
 
             <div class="result-metrics">
@@ -695,10 +697,10 @@
                     <div class="metric-val" id="r-temp">—</div>
                     <div class="metric-key">Temperature</div>
                 </div>
-                <div class="metric">
+                <!-- <div class="metric">
                     <div class="metric-val" id="r-feels">—</div>
                     <div class="metric-key">Feels Like</div>
-                </div>
+                </div> -->
                 <div class="metric">
                     <div class="metric-val" id="r-hum">—</div>
                     <div class="metric-key">Humidity</div>
@@ -784,8 +786,19 @@
                 document.getElementById('r-city').textContent = loc?.name || '—';
                 document.getElementById('r-country').textContent = loc?.country ? '📌 ' + loc.country : '';
                 document.getElementById('r-coords').textContent = loc?.coord ? `${loc.coord.lat}°, ${loc.coord.lon}°` : '';
-                document.getElementById('r-icon').src = w?.icon ? `https://openweathermap.org/img/wn/${w.icon}@2x.png` : '';
-                document.getElementById('r-cond').textContent = w?.description || '';
+                if (w?.icon) {
+                    const iconUrl = `https://openweathermap.org/img/wn/${w.icon}@2x.png`;
+                    const iconEl = document.getElementById('r-icon');
+                    iconEl.src = iconUrl;
+                    iconEl.alt = w?.description ? `Weather: ${w.description}` : 'Weather icon';
+                    iconEl.style.display = '';
+                } else {
+                    document.getElementById('r-icon').src = '';
+                    document.getElementById('r-icon').style.display = 'none';
+                }
+
+                document.getElementById('r-cond').textContent = w?.description || '-';
+
 
                 document.getElementById('r-temp').textContent = (w?.temperature ?? '-') + ' °C';
                 document.getElementById('r-feels').textContent = '-';
@@ -806,6 +819,7 @@
             document.getElementById('err-msg').textContent = msg;
             show('err-wrap');
         }
+
 
         function show(id) { document.getElementById(id).style.display = ''; }
         function hide(id) { document.getElementById(id).style.display = 'none'; }

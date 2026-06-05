@@ -14,13 +14,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+# Django admin portal intentionally disabled for this project.
+# from django.contrib import admin
+
 from django.urls import include, path
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Disable Django admin portal; we provide a custom Administrator UI instead.
+    # path('admin/', include('weather.urls')),
+
+
+
     path('', include('weather.urls')),
 ]
+
 
 # Serve static files in development (so /static/... URLs work).
 from django.conf import settings

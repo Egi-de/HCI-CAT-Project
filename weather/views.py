@@ -9,6 +9,14 @@ from django.utils import timezone
 
 from .models import SearchHistory
 
+from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth import get_user_model
+from django.db.models import Count
+
+
 
 OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
@@ -174,17 +182,28 @@ def weather_search_api(request):
             return JsonResponse({"ok": False, "error": f"API Error: {str(msg).capitalize()}"}, status=r.status_code)
 
         # Save search history (best effort)
-        SearchHistory.objects.create(
-            query=query,
-            query_type=query_type,
-            result_city=data.get("name", "") or "",
-            result_country=(data.get("sys") or {}).get("country", "") or "",
-            temperature=(data.get("main") or {}).get("temp"),
-            condition=((data.get("weather") or [{}])[0] or {}).get("description", "") or "",
-            ip_address=request.META.get("REMOTE_ADDR", ""),
-        )
+        try:
+            SearchHistory.objects.create(
+                query=query[:200] if query else "",
+                query_type=query_type,
+                result_city=data.get("name", "") or "",
+                result_country=(data.get("sys") or {}).get("country", "") or "",
+                temperature=(data.get("main") or {}).get("temp"),
+                condition=((data.get("weather") or [{}])[0] or {}).get("description", "") or "",
+                ip_address=(request.META.get("REMOTE_ADDR", "") or "")[:50],
+            )
+        except Exception as e:
+            # Persistence is best-effort, but do not fail silently.
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception("Failed to save SearchHistory for query_type=%s query=%r", query_type, query)
+
+            # Keep the weather UI working.
+            pass
 
         return JsonResponse(_build_response(data))
+
+
 
     except Exception as e:
         # If the network/API key is missing/unreachable, fall back to demo data.
@@ -199,13 +218,115 @@ def _is_staff_user(user):
     return getattr(user, "is_authenticated", False) and getattr(user, "is_staff", False)
 
 
-@user_passes_test(_is_staff_user)
+User = get_user_model()
+
+
+def admin_login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if not user.is_staff:
+                messages.error(request, "Incorrect credentials.")
+            else:
+                login(request, user)
+                messages.success(request, "Welcome back, administrator.")
+                return redirect('admin-dashboard')
+        else:
+            messages.error(request, "Incorrect username or password.")
+    else:
+        form = AuthenticationForm(request)
+
+    return render(request, 'weather/admin_login.html', {'form': form})
+
+
+def admin_signup(request):
+    if request.method == 'POST':
+        # Auto-admin: create a staff account on signup.
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            login(request, user)
+            messages.success(request, "Administrator account created.")
+            return redirect('admin-dashboard')
+        else:
+            messages.error(request, "Signup failed. Please correct the errors below.")
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'weather/admin_signup.html', {'form': form})
+
+
+def admin_logout_view(request):
+    logout(request)
+    messages.success(request, "You have been logged out.")
+    return redirect('weather-home')
+
+
+def _staff_required(view_func):
+    return user_passes_test(_is_staff_user, login_url='admin-login')(view_func)
+
+
+@_staff_required
+def admin_dashboard(request):
+    """Admin dashboard.
+
+    Dynamic requirement: after each user search, SearchHistory is saved in
+    weather_search_api() and this dashboard always re-queries the database.
+    """
+    total_searches = SearchHistory.objects.count()
+    by_type = list(
+        SearchHistory.objects.values('query_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    top_conditions = list(
+        SearchHistory.objects.values('condition')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:5]
+    )
+
+    context = {
+        'total_searches': total_searches,
+        'by_type': by_type,
+        'top_conditions': top_conditions,
+    }
+    return render(request, 'weather/admin_dashboard.html', context)
+
+
+
+
+@_staff_required
 def admin_history(request):
-    # Simple HTML placeholder; full templates can be added later.
-    return HttpResponse("Admin history not yet fully implemented")
+    qs = SearchHistory.objects.select_related().all()[:200]
+    return render(request, 'weather/admin_history.html', {'history': qs})
 
 
-@user_passes_test(_is_staff_user)
+@_staff_required
 def admin_stats(request):
-    return HttpResponse("Admin stats not yet fully implemented")
+    total_searches = SearchHistory.objects.count()
+    by_type = list(
+        SearchHistory.objects.values('query_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    # Top conditions
+    top_conditions = list(
+        SearchHistory.objects.values('condition')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:10]
+    )
+
+    context = {
+        'total_searches': total_searches,
+        'by_type': by_type,
+        'top_conditions': top_conditions,
+    }
+    return render(request, 'weather/admin_stats.html', context)
+
 

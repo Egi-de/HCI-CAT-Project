@@ -20,13 +20,15 @@
 
             <nav class="nav">
                 {% if user.is_authenticated and user.is_staff %}
+                <a class="nav-link" href="{% url 'admin-dashboard' %}">Dashboard</a>
                 <a class="nav-link" href="{% url 'admin-history' %}">Admin history</a>
                 <a class="nav-link" href="{% url 'admin-stats' %}">Usage stats</a>
-                <a class="nav-link nav-link--ghost" href="/admin/">Django admin</a>
                 {% endif %}
 
+
                 {% if user.is_authenticated %}
-                <form class="nav-logout" method="post" action="{% url 'admin:logout' %}">
+                <form class="nav-logout" method="post" action="{% url 'admin-logout' %}">
+
                     {% csrf_token %}
                     <button class="nav-link nav-link--ghost" type="submit">Logout</button>
                 </form>

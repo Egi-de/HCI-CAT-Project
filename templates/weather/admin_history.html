@@ -1,0 +1,73 @@
+{% extends 'weather/base.html' %}
+
+{% block title %}Admin History — WeatherSense{% endblock %}
+
+{% block content %}
+<div style="max-width:980px;margin:1.6rem auto;">
+    <div class="search-card" style="padding:1.6rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+                <h2 style="font-family: var(--font-h); margin:0;">Weather Search History</h2>
+                <div style="color: var(--dim); margin-top:.35rem; font-size:.9rem;">Last 200 entries</div>
+            </div>
+            <div style="display:flex;gap:.75rem;">
+                <a href="{% url 'admin-dashboard' %}" class="btn-admin"
+                    style="display:inline-flex;align-items:center;">Dashboard</a>
+                <a href="{% url 'admin-stats' %}" class="btn-admin"
+                    style="display:inline-flex;align-items:center;">Usage stats</a>
+            </div>
+        </div>
+
+        <div style="overflow:auto; margin-top:1.1rem;">
+            <table style="width:100%; border-collapse: collapse; min-width:760px;">
+                <thead>
+                    <tr>
+                        <th
+                            style="text-align:left; padding:.75rem; border-bottom:1px solid var(--border); color:var(--dim); font-size:.82rem;">
+                            Time</th>
+                        <th
+                            style="text-align:left; padding:.75rem; border-bottom:1px solid var(--border); color:var(--dim); font-size:.82rem;">
+                            Query</th>
+                        <th
+                            style="text-align:left; padding:.75rem; border-bottom:1px solid var(--border); color:var(--dim); font-size:.82rem;">
+                            Type</th>
+                        <th
+                            style="text-align:left; padding:.75rem; border-bottom:1px solid var(--border); color:var(--dim); font-size:.82rem;">
+                            Result</th>
+                        <th
+                            style="text-align:left; padding:.75rem; border-bottom:1px solid var(--border); color:var(--dim); font-size:.82rem;">
+                            Condition</th>
+                        <th
+                            style="text-align:left; padding:.75rem; border-bottom:1px solid var(--border); color:var(--dim); font-size:.82rem;">
+                            IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr>
+                        <td
+                            style="padding:.75rem; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem; white-space:nowrap;">
+                            {{ h.timestamp }}</td>
+                        <td style="padding:.75rem; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem;">{{
+                            h.query }}</td>
+                        <td style="padding:.75rem; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem;">{{
+                            h.query_type }}</td>
+                        <td style="padding:.75rem; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem;">{{
+                            h.result_city }}{% if h.result_country %}, {{ h.result_country }}{% endif %}</td>
+                        <td
+                            style="padding:.75rem; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem; color: var(--accent2);">
+                            {{ h.condition }}</td>
+                        <td style="padding:.75rem; border-bottom:1px solid rgba(255,255,255,.06); font-size:.9rem;">{{
+                            h.ip_address }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding:1rem; color:var(--dim);">No searches yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
