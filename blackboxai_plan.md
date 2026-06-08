@@ -1,72 +1,36 @@
-# Edit plan: Convert Flask weather + admin logic to Django
+# Admin guest history: multi-city view
 
 ## Information gathered
-- `weather/urls.py` expects these endpoints:
-  - `''` -> `views.index`
-  - `'api/weather-search/'` -> `views.weather_search_api`
-  - `'admin/history/'` -> `views.admin_history`
-  - `'admin/stats/'` -> `views.admin_stats`
-- Current `weather/views.py` contains placeholder implementations for `weather_search_api/admin_history/admin_stats`.
-- Current `weather/models.py` is empty.
-- `templates/weather/index.html` is now your WeatherSense UI; its JS fetches `/api/weather-search/`.
-- `config/settings.py` already has `STATICFILES_DIRS` and `OPENWEATHER_API_KEY`.
+- Guest searches are persisted in `weather.models.SearchHistory`.
+- `weather.views.admin_dashboard` currently shows only aggregates (total count, query types, top conditions).
+- `weather.views.admin_history` currently shows the last 200 rows with no way to group by city/search.
 
-## Plan
-### Step 1 — Model layer
-- Create `SearchHistory` Django model matching Flask fields:
-  - `query` (city or "lat,lon")
-  - `query_type` ('city'/'coords')
-  - `result_city`, `result_country`
-  - `temperature`, `condition`
-  - `timestamp` (auto_add)
-  - `ip_address`
-- Add appropriate indexes (optional) for query performance.
+## Goal
+On the admin UI:
+1. Show total search count.
+2. On the History page, show *multiple cities* the guest users searched for, with their associated records.
 
-### Step 2 — Weather API endpoint
-- Replace `weather_search_api` placeholder:
-  - Parse request parameters expected by `templates/weather/index.html` JS:
-    - if city: `?city=...`
-    - if coords: `?lat=...&lon=...`
-  - Call OpenWeather via `requests` (same base URL / units metric).
-  - Build the JSON response in the structure your UI expects.
-    - The current UI JS expects keys like `ok`, and nested `weather` and `location`.
-  - Save each successful search to `SearchHistory`.
-  - Return meaningful `4xx/5xx` JSON errors.
+## Edit plan (files)
+### 1) `weather/views.py`
+- Update `admin_history` to:
+  - group rows by `query` + `query_type`
+  - include count per group
+  - show latest timestamp per group
+  - still provide the underlying rows for each group so the admin can see “records for those cities”.
 
-### Step 3 — Admin endpoints (Django auth)
-- Update `admin_history` and `admin_stats`:
-  - Restrict to `request.user.is_authenticated and request.user.is_staff`.
-  - Implement:
-    - `/admin/history/` with pagination (page, per_page=20)
-    - `/admin/stats/` computing totals + top cities + today count
-  - Create templates:
-    - `templates/weather/admin_login.html` OR use Django’s built-in admin auth pages.
-    - `templates/weather/admin_dashboard.html`
-    - `templates/weather/admin_history.html`
-  - If you keep custom `/admin/login`, implement it with username/password and `User`.
-  - Implement delete endpoint (note: current `weather/urls.py` does not include delete URL; we may add it).
+### 2) `templates/weather/admin_history.html`
+- Replace the flat table with a grouped table:
+  - City/Query (display `query`)
+  - Type
+  - Count
+  - Latest time
+  - Expandable section (or second table per group) listing each record’s result + condition + ip.
 
-### Step 4 — URL wiring / templates
-- If needed, extend `weather/urls.py` to include missing routes from the UI:
-  - delete: `/admin/delete/<int:id>/`.
-  - dashboard: `/admin/dashboard/` (currently UI links to `/admin/dashboard`).
-- Ensure templates render and variables match.
-
-### Step 5 — Migrations + verification
-- Run `python manage.py makemigrations weather && python manage.py migrate`.
-- Smoke test:
-  - GET `/` renders UI.
-  - Call `/api/weather-search/?city=London` returns expected JSON.
-  - Search writes to DB.
-  - Admin stats/history pages show correct counts.
-
-## Dependent files to edit
-- `weather/models.py`
-- `weather/views.py`
-- `weather/urls.py`
-- Add templates under `templates/weather/` for admin pages.
+### 3) `templates/weather/admin_dashboard.html` (optional, minimal)
+- Ensure it keeps showing total search count.
+- (No major changes required for this task since “total search” is already present.)
 
 ## Followup steps
-- Run migrations.
-- Start dev server and verify the end-to-end flow.
-
+- Run `python manage.py makemigrations` / `migrate` only if models changed (not expected).
+- Run server and test by performing 4 city searches as guest.
+- Verify admin History shows those 4 city groups with their rows.

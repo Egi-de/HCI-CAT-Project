@@ -16,6 +16,11 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 
 
 OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
@@ -163,55 +168,87 @@ def weather_search_api(request):
     query_type = None
     query = None
 
+    if city:
+        query_type = "city"
+        query = city
+    else:
+        if not lat or not lon:
+            return JsonResponse(
+                {"ok": False, "error": "Please enter a city name or coordinates."},
+                status=400,
+            )
+        query_type = "coords"
+        query = f"{lat},{lon}"
+
+    # Persist immediately so the admin history always shows what guests searched for,
+    # even when OpenWeather fails / key is missing / network unreachable.
+    persisted = None
     try:
-        if city:
-            query_type = "city"
-            query = city
+        persisted = SearchHistory.objects.create(
+            query=query[:200] if query else "",
+            query_type=query_type,
+            result_city="",
+            result_country="",
+            temperature=None,
+            condition="",
+            ip_address=(request.META.get("REMOTE_ADDR", "") or "")[:50],
+        )
+        logger.info("Saved SearchHistory id=%s query_type=%s query=%r", persisted.id, query_type, query)
+    except Exception:
+        logger.exception(
+            "Failed to persist SearchHistory query_type=%s query=%r ip=%r",
+            query_type,
+            query,
+            request.META.get("REMOTE_ADDR", ""),
+        )
+        # If we cannot persist, return an error so this isn't silently broken.
+        return JsonResponse({"ok": False, "error": "Could not save search history."}, status=500)
+
+    # Now try OpenWeather.
+    try:
+        if query_type == "city":
             r = _fetch_weather_by_city(city)
         else:
-            if not lat or not lon:
-                return JsonResponse({"ok": False, "error": "Please enter a city name or coordinates."}, status=400)
-            query_type = "coords"
-            query = f"{lat},{lon}"
             r = _fetch_weather_by_coords(lat, lon)
 
         data = r.json() if r.content else {}
 
+        # If the OpenWeather request fails (e.g., not found), still return a response,
+        # but we keep the persisted history row with empty result fields.
         if r.status_code != 200:
-            msg = data.get("message", "Location not found.")
-            return JsonResponse({"ok": False, "error": f"API Error: {str(msg).capitalize()}"}, status=r.status_code)
-
-        # Save search history (best effort)
-        try:
-            SearchHistory.objects.create(
-                query=query[:200] if query else "",
-                query_type=query_type,
-                result_city=data.get("name", "") or "",
-                result_country=(data.get("sys") or {}).get("country", "") or "",
-                temperature=(data.get("main") or {}).get("temp"),
-                condition=((data.get("weather") or [{}])[0] or {}).get("description", "") or "",
-                ip_address=(request.META.get("REMOTE_ADDR", "") or "")[:50],
+            msg = data.get("message", "Location not found.") if isinstance(data, dict) else "Location not found."
+            return JsonResponse(
+                {"ok": False, "error": f"API Error: {str(msg).capitalize()}"},
+                status=r.status_code,
             )
-        except Exception as e:
-            # Persistence is best-effort, but do not fail silently.
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.exception("Failed to save SearchHistory for query_type=%s query=%r", query_type, query)
 
-            # Keep the weather UI working.
-            pass
+        result_city = (data.get("name") if isinstance(data, dict) else "") or ""
+        result_country = (
+            ((data.get("sys") or {}).get("country") if isinstance(data, dict) else "") or ""
+        )
+        temperature = ((data.get("main") or {}).get("temp") if isinstance(data, dict) else None)
+        condition = (
+            (((data.get("weather") or [{}])[0] or {}).get("description") if isinstance(data, dict) else "")
+            or ""
+        )
+
+        # Update the persisted row with results.
+        SearchHistory.objects.filter(id=persisted.id).update(
+            result_city=result_city,
+            result_country=result_country,
+            temperature=temperature,
+            condition=condition,
+        )
 
         return JsonResponse(_build_response(data))
 
-
-
-    except Exception as e:
-        # If the network/API key is missing/unreachable, fall back to demo data.
-        # IMPORTANT: also return ok=True so the guest UI doesn't show a network error.
+    except Exception:
+        # OpenWeather failure: return fallback demo data; admin history row is already saved.
         return JsonResponse(
             _fallback_weather_response(query or city or f"{lat},{lon}", query_type or "city"),
             status=200,
         )
+
 
 
 
@@ -307,8 +344,50 @@ def admin_dashboard(request):
 
 @_staff_required
 def admin_history(request):
-    qs = SearchHistory.objects.select_related().all()[:200]
-    return render(request, 'weather/admin_history.html', {'history': qs})
+    # Group searches by the original user query.
+    # - For city searches: query == "City Name"
+    # - For coords searches: query == "lat,lon"
+    # We still keep all underlying records for each group so the admin can
+    # see weather results for multiple cities.
+    qs = (
+        SearchHistory.objects.select_related()
+        .all()
+        .order_by('-timestamp')
+    )
+
+    # Limit total rows to keep the page responsive.
+    qs = qs[:200]
+
+    # Build groups in Python (small page size already limited).
+    groups_map = {}
+    for h in qs:
+        key = (h.query_type, h.query)
+        if key not in groups_map:
+            groups_map[key] = {
+                'query_type': h.query_type,
+                'query': h.query,
+                'count': 0,
+                'latest_timestamp': h.timestamp,
+                'items': [],
+            }
+        g = groups_map[key]
+        g['count'] += 1
+        if h.timestamp > g['latest_timestamp']:
+            g['latest_timestamp'] = h.timestamp
+        g['items'].append(h)
+
+    # Sort groups by latest timestamp desc.
+    groups = sorted(groups_map.values(), key=lambda x: x['latest_timestamp'], reverse=True)
+
+    return render(
+        request,
+        'weather/admin_history.html',
+        {
+            'history_groups': groups,
+            'history_total_searches': SearchHistory.objects.count(),
+        },
+    )
+
 
 
 @_staff_required

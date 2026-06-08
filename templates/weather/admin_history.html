@@ -8,7 +8,7 @@
         <div class="admin-head">
             <div>
                 <h2 style="margin:0;">Weather Search History</h2>
-                <div class="admin-sub">Last 200 entries</div>
+                <div class="admin-sub">Grouped by multiple cities/queries (last 200 records)</div>
             </div>
             <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
                 <a href="{% url 'admin-dashboard' %}" class="btn-admin">Dashboard</a>
@@ -16,35 +16,55 @@
             </div>
         </div>
 
-        <div class="admin-table-wrap">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Query</th>
-                        <th>Type</th>
-                        <th>Result</th>
-                        <th>Condition</th>
-                        <th>IP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for h in history %}
-                    <tr>
-                        <td style="white-space:nowrap;">{{ h.timestamp }}</td>
-                        <td>{{ h.query }}</td>
-                        <td>{{ h.query_type }}</td>
-                        <td>{{ h.result_city }}{% if h.result_country %}, {{ h.result_country }}{% endif %}</td>
-                        <td class="admin-accent">{{ h.condition }}</td>
-                        <td>{{ h.ip_address }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="admin-muted" style="padding:16px;">No searches yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="admin-table-wrap" style="margin-top:1rem;">
+            <div class="admin-sub" style="margin-bottom:.7rem;">Total searches (all time): <b>{{ history_total_searches
+                    }}</b></div>
+
+            {% if history_groups %}
+            {% for g in history_groups %}
+            <div class="admin-tile" style="padding:14px; margin-bottom:12px;">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+                    <div>
+                        <div style="font-weight:900; font-size:1.05rem;">{{ g.query }}</div>
+                        <div class="admin-muted">Type: {{ g.query_type }}</div>
+                        <div class="admin-muted">Latest: {{ g.latest_timestamp }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:900; font-size:1.4rem;">{{ g.count }}</div>
+                        <div class="admin-muted">searches</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px; overflow-x:auto;">
+                    <table class="admin-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Result</th>
+                                <th>Condition</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in g.items %}
+                            <tr>
+                                <td style="white-space:nowrap;">{{ h.timestamp }}</td>
+                                <td>
+                                    {{ h.result_city }}{% if h.result_country %}, {{ h.result_country }}{% endif %}
+                                </td>
+                                <td class="admin-accent">{{ h.condition }}</td>
+                                <td>{{ h.ip_address }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="admin-muted" style="padding:16px;">No searches yet.</div>
+            {% endif %}
         </div>
     </div>
 </div>
