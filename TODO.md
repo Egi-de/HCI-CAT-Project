@@ -1,14 +1,11 @@
-# TODO — WeatherSense HCI Admin Dashboard Upgrade
+# TODO — WeatherSense Admin Dashboard Upgrade
 
-## Step 1 — Fix guest UI
-- [x] Remove duplicated/invalid second UI in `templates/weather/index.html` (everything after the first closing `</html>`).
-- [x] Ensure the remaining HTML/JS only references existing element IDs.
-
-## Step 2 — Upgrade admin UI styling
-- [x] Add missing dashboard-focused CSS classes in `static/weather/app.css` (kpi cards, table styling, badges, responsive grids).
-- [x] Refactor `templates/weather/admin_dashboard.html`, `admin_history.html`, `admin_stats.html` to use those classes (minimal inline styles).
-
-## Step 3 — Validate
-- [x] Run migrations (only if needed) and start server.
-- [x] Manually verify: guest search works + history pages populate + admin dashboard loads without layout glitches.
+## Next steps (planned)
+1. Update `admin_history` backend to support filters: date range, condition substring, location
+2. Update `weather_search_api` to anonymize IP before saving
+3. Update `admin_history.html` UI to support collapsible per-group view + improved per-group aggregates
+4. Add real-time dashboard charts:
+   - new staff-only JSON endpoint for chart aggregates/time-bucketed counts
+   - update `admin_dashboard.html` to render charts (Chart.js) with polling
+5. Run the app and verify guest search, admin history grouping/filtering, and real-time chart updates
 

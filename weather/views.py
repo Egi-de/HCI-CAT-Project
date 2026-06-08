@@ -17,13 +17,33 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count
 
 import logging
+import hashlib
 
 logger = logging.getLogger(__name__)
 
 
-
-
 OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+
+
+def _anonymize_ip(raw_ip: str) -> str:
+    """Return a privacy-preserving identifier for an IP address.
+
+    We store a salted SHA256 hash (deterministic for the same deployment)
+    instead of raw IPs to support privacy compliance.
+    """
+    ip = (raw_ip or "").strip()
+    if not ip:
+        return ""
+
+    salt = getattr(settings, "IP_ANONYMIZATION_SALT", "")
+    if not salt:
+        # Fallback: keep deterministic across this server instance.
+        salt = os.environ.get("IP_ANONYMIZATION_SALT", "")
+
+    digest = hashlib.sha256(f"{salt}:{ip}".encode("utf-8")).hexdigest()
+    # Keep short for storage/UI; collision risk is acceptable for analytics display.
+    return digest[:20]
+
 
 
 def index(request):
@@ -191,7 +211,7 @@ def weather_search_api(request):
             result_country="",
             temperature=None,
             condition="",
-            ip_address=(request.META.get("REMOTE_ADDR", "") or "")[:50],
+            ip_address=_anonymize_ip(request.META.get("REMOTE_ADDR", "")),
         )
         logger.info("Saved SearchHistory id=%s query_type=%s query=%r", persisted.id, query_type, query)
     except Exception:
@@ -338,6 +358,7 @@ def admin_dashboard(request):
         'top_conditions': top_conditions,
     }
     return render(request, 'weather/admin_dashboard.html', context)
+
 
 
 

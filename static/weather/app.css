@@ -185,8 +185,9 @@ label {
   font-size: 14px;
 }
 
-input[type="text"],
-input[type="number"] {
+.auth-wrap input,
+.auth-wrap select,
+.auth-wrap textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
@@ -196,10 +197,14 @@ input[type="number"] {
   outline: none;
 }
 
-input:focus {
+.auth-wrap input:focus,
+.auth-wrap select:focus,
+.auth-wrap textarea:focus {
   border-color: rgba(106, 166, 255, 0.7);
   box-shadow: 0 0 0 4px rgba(106, 166, 255, 0.15);
 }
+
+
 
 .btn {
   width: 100%;
