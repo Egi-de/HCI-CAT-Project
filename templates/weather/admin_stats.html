@@ -3,54 +3,52 @@
 {% block title %}Admin Stats — WeatherSense{% endblock %}
 
 {% block content %}
-<div style="max-width:980px;margin:1.6rem auto;">
-    <div class="search-card" style="padding:1.6rem;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+<div class="admin-wrap">
+    <div class="card" style="padding:1.6rem;">
+        <div class="admin-head">
             <div>
-                <h2 style="font-family: var(--font-h); margin:0;">System Usage Statistics</h2>
-                <div style="color: var(--dim); margin-top:.35rem; font-size:.9rem;">Based on stored weather searches
-                </div>
+                <h2 style="margin:0;">System Usage Statistics</h2>
+                <div class="admin-sub">Based on stored weather searches</div>
             </div>
-            <div style="display:flex;gap:.75rem;">
-                <a href="{% url 'admin-dashboard' %}" class="btn-admin"
-                    style="display:inline-flex;align-items:center;">Dashboard</a>
-                <a href="{% url 'admin-history' %}" class="btn-admin"
-                    style="display:inline-flex;align-items:center;">History</a>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                <a href="{% url 'admin-dashboard' %}" class="btn-admin">Dashboard</a>
+                <a href="{% url 'admin-history' %}" class="btn-admin">History</a>
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:1rem;margin-top:1.2rem;">
-            <div class="feat" style="margin:0;">
-                <div style="font-size:2rem;font-family:var(--font-h);">{{ total_searches }}</div>
-                <div style="color:var(--dim); margin-top:.35rem;">Total searches</div>
+        <div class="admin-kpis">
+            <div class="admin-tile">
+                <div style="font-size:2.2rem;font-weight:900;">{{ total_searches }}</div>
+                <div class="admin-sub" style="margin-top:.4rem;">Total searches</div>
             </div>
-            <div class="feat" style="margin:0;">
-                <div style="color:var(--dim); font-size:.85rem;">Top query types</div>
-                <div style="margin-top:.6rem;">
+
+            <div class="admin-tile">
+                <div class="admin-sub" style="font-size:.9rem;">Top query types</div>
+                <div style="margin-top:.8rem;">
                     {% for t in by_type|slice:':4' %}
-                    <div style="display:flex;justify-content:space-between;gap:.75rem; margin:.35rem 0;">
-                        <div style="color:var(--text);">{{ t.query_type }}</div>
-                        <div style="font-family:var(--font-h);">{{ t.count }}</div>
+                    <div style="display:flex;justify-content:space-between;gap:.75rem;margin:.35rem 0;">
+                        <div>{{ t.query_type }}</div>
+                        <div style="font-weight:800;">{{ t.count }}</div>
                     </div>
                     {% empty %}
-                    <div style="color:var(--dim);">No data.</div>
+                    <div class="admin-muted">No data.</div>
                     {% endfor %}
                 </div>
             </div>
         </div>
 
-        <div style="margin-top:1.2rem;">
-            <div style="color:var(--dim); font-size:.85rem; margin-bottom:.6rem;">Most common conditions</div>
-            <div style="display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:1rem;">
-                {% for c in top_conditions|slice:':10' %}
-                <div class="feat" style="margin:0;">
-                    <div style="color:var(--accent2); font-weight:700;">{{ c.condition }}</div>
-                    <div style="margin-top:.4rem; font-family:var(--font-h); font-size:1.6rem;">{{ c.count }}</div>
-                </div>
-                {% empty %}
-                <div style="color:var(--dim);">No condition data.</div>
-                {% endfor %}
+        <div class="admin-sub" style="margin-top:1.2rem; font-size:.9rem; margin-bottom:.7rem;">Most common
+            conditions</div>
+
+        <div class="admin-grid-auto">
+            {% for c in top_conditions|slice:':10' %}
+            <div class="admin-tile" style="padding:16px;">
+                <div class="admin-accent" style="font-size:1.1rem;">{{ c.condition }}</div>
+                <div style="margin-top:.4rem;font-weight:900;font-size:1.7rem;">{{ c.count }}</div>
             </div>
+            {% empty %}
+            <div class="admin-muted">No condition data.</div>
+            {% endfor %}
         </div>
     </div>
 </div>

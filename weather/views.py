@@ -207,7 +207,12 @@ def weather_search_api(request):
 
     except Exception as e:
         # If the network/API key is missing/unreachable, fall back to demo data.
-        return JsonResponse(_fallback_weather_response(query or city or f"{lat},{lon}", query_type or "city"))
+        # IMPORTANT: also return ok=True so the guest UI doesn't show a network error.
+        return JsonResponse(
+            _fallback_weather_response(query or city or f"{lat},{lon}", query_type or "city"),
+            status=200,
+        )
+
 
 
 

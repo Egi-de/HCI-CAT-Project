@@ -1,30 +1,14 @@
-# TODO
+# TODO — WeatherSense HCI Admin Dashboard Upgrade
 
-## Fix Django startup error (missing view functions)
-- [x] Implement missing Django views referenced by `weather/urls.py`.
-- [x] `python manage.py check` passes.
+## Step 1 — Fix guest UI
+- [x] Remove duplicated/invalid second UI in `templates/weather/index.html` (everything after the first closing `</html>`).
+- [x] Ensure the remaining HTML/JS only references existing element IDs.
 
-## UI wiring
-- [x] Update `templates/weather/index.html` to your WeatherSense “index” HTML.
-- [ ] Ensure the index page works end-to-end with the weather API endpoint and admin pages.
+## Step 2 — Upgrade admin UI styling
+- [x] Add missing dashboard-focused CSS classes in `static/weather/app.css` (kpi cards, table styling, badges, responsive grids).
+- [x] Refactor `templates/weather/admin_dashboard.html`, `admin_history.html`, `admin_stats.html` to use those classes (minimal inline styles).
 
-## Convert Flask to Django (core app logic)
-- [ ] Create Django model(s) equivalent to Flask:
-  - [ ] SearchHistory model
-  - [ ] Admin auth (use Django User or custom model)
-- [ ] Implement `/api/weather-search/` to call OpenWeather and return the JSON format the index JS expects.
-- [ ] Save each successful search into SearchHistory (include query, type, result fields, timestamp, ip).
-- [ ] Implement admin pages:
-  - [ ] `/admin/login` (if custom) OR use Django auth views + custom templates
-  - [ ] `/admin/dashboard`
-  - [ ] `/admin/history`
-  - [ ] `/admin/delete/<id>`
-- [ ] Lock admin pages with `is_staff`/permissions.
-
-## Testing
-- [ ] Run `python manage.py runserver` and verify:
-  - [ ] GET `/` renders the UI
-  - [ ] POST `/api/weather-search/` returns correct JSON
-  - [ ] History records appear in `/admin/history`
-  - [ ] Stats counters update in `/admin/dashboard`
+## Step 3 — Validate
+- [x] Run migrations (only if needed) and start server.
+- [x] Manually verify: guest search works + history pages populate + admin dashboard loads without layout glitches.
 

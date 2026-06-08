@@ -777,8 +777,15 @@
                 const res = await fetch(url);
                 const data = await res.json();
                 document.getElementById('loader').style.display = 'none';
+                // Debug info (can help diagnose guest-only failures)
+                // You can remove later.
+                console.debug('weather-search status:', res.status);
+                console.debug('weather-search payload:', data);
 
+
+                // Even if OpenWeather fails, backend fallback returns ok=true.
                 if (!data.ok) return showErr(data.error || 'Something went wrong.');
+
 
                 const w = data.weather;
                 const loc = data.location;
@@ -801,7 +808,11 @@
 
 
                 document.getElementById('r-temp').textContent = (w?.temperature ?? '-') + ' °C';
-                document.getElementById('r-feels').textContent = '-';
+                {
+                    const feelsEl = document.getElementById('r-feels');
+                    if (feelsEl) feelsEl.textContent = '-';
+                }
+
                 document.getElementById('r-hum').textContent = (w?.humidity ?? '-') + ' %';
                 document.getElementById('r-wind').textContent = (w?.wind_speed ?? '-') + ' m/s';
 
@@ -811,8 +822,11 @@
                 show('result');
             } catch (err) {
                 document.getElementById('loader').style.display = 'none';
-                showErr('Network error — please check your connection.');
+                console.error('weather-search fetch failed:', err);
+                // Show more detail than the generic message.
+                showErr('Network error. ' + (err && err.message ? err.message : 'Fetch failed.'));
             }
+
         }
 
         function showErr(msg) {
@@ -827,185 +841,3 @@
 </body>
 
 </html>
-
-
-<h2 class="card-title">Search weather</h2>
-
-<div class="mode">
-    <label class="mode-item">
-        <input type="radio" name="mode" value="city" checked />
-        <span>City name</span>
-    </label>
-    <label class="mode-item">
-        <input type="radio" name="mode" value="coords" />
-        <span>Latitude / Longitude</span>
-    </label>
-</div>
-
-<form id="weather-form" class="form" autocomplete="off">
-    <div class="field" id="field-city">
-        <label for="city">City</label>
-        <input id="city" name="city" type="text" placeholder="e.g., Kigali, Nairobi, London" required />
-    </div>
-
-    <div class="field" id="field-coords" style="display:none;">
-        <label for="lat">Latitude</label>
-        <input id="lat" name="lat" type="number" step="any" placeholder="-1.9441" />
-
-        <label for="lon" style="margin-top:10px;">Longitude</label>
-        <input id="lon" name="lon" type="number" step="any" placeholder="30.0619" />
-    </div>
-
-    <button class="btn" type="submit">Get weather</button>
-    <p class="hint" id="form-error" aria-live="polite"></p>
-</form>
-</div>
-
-<div class="card result">
-    <h2 class="card-title">Result</h2>
-
-    <div id="loading" class="loading" style="display:none;">Loading…</div>
-
-    <div id="result-empty" class="empty-state">
-        Enter a city or coordinates to see the weather.
-    </div>
-
-    <div id="result" style="display:none;">
-        <div class="result-header">
-            <div>
-                <div id="result-location" class="result-location"></div>
-                <div id="result-time" class="result-time"></div>
-            </div>
-            <div class="icon-wrap">
-                <img id="result-icon" alt="weather icon" />
-            </div>
-        </div>
-
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-label">Temperature</div>
-                <div id="result-temp" class="stat-value"></div>
-            </div>
-            <div class="stat">
-                <div class="stat-label">Humidity</div>
-                <div id="result-humidity" class="stat-value"></div>
-            </div>
-            <div class="stat">
-                <div class="stat-label">Wind speed</div>
-                <div id="result-wind" class="stat-value"></div>
-            </div>
-        </div>
-
-        <div class="description">
-            <div class="stat-label">Condition</div>
-            <div id="result-desc" class="description-value"></div>
-        </div>
-
-        <div id="result-error" class="error" style="display:none;"></div>
-    </div>
-</div>
-</section>
-
-<script>
-    // Lightweight inline logic for the guest UI.
-    const form = document.getElementById('weather-form');
-    const errorEl = document.getElementById('form-error');
-    const loadingEl = document.getElementById('loading');
-
-    const resultEmpty = document.getElementById('result-empty');
-    const resultWrap = document.getElementById('result');
-    const resultError = document.getElementById('result-error');
-
-    const cityField = document.getElementById('field-city');
-    const coordsField = document.getElementById('field-coords');
-
-    const iconEl = document.getElementById('result-icon');
-    const locEl = document.getElementById('result-location');
-    const timeEl = document.getElementById('result-time');
-    const tempEl = document.getElementById('result-temp');
-    const humEl = document.getElementById('result-humidity');
-    const windEl = document.getElementById('result-wind');
-    const descEl = document.getElementById('result-desc');
-
-    function setMode(mode) {
-        if (mode === 'city') {
-            cityField.style.display = 'block';
-            coordsField.style.display = 'none';
-        } else {
-            cityField.style.display = 'none';
-            coordsField.style.display = 'block';
-        }
-        errorEl.textContent = '';
-    }
-
-    document.querySelectorAll('input[name="mode"]').forEach(r => {
-        r.addEventListener('change', () => setMode(r.value));
-    });
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        resultError.style.display = 'none';
-        resultError.textContent = '';
-        errorEl.textContent = '';
-
-        const mode = document.querySelector('input[name="mode"]:checked')?.value || 'city';
-
-        let url = '/api/weather-search/?';
-
-        if (mode === 'city') {
-            const city = document.getElementById('city').value.trim();
-            if (!city) {
-                errorEl.textContent = 'Please enter a city name.';
-                return;
-            }
-            url += new URLSearchParams({ city }).toString();
-        } else {
-            const lat = document.getElementById('lat').value;
-            const lon = document.getElementById('lon').value;
-            if (lat === '' || lon === '') {
-                errorEl.textContent = 'Please enter both latitude and longitude.';
-                return;
-            }
-            url += new URLSearchParams({ lat, lon }).toString();
-        }
-
-        loadingEl.style.display = 'block';
-        resultEmpty.style.display = 'none';
-        resultWrap.style.display = 'none';
-
-        try {
-            const resp = await fetch(url);
-            const data = await resp.json();
-            loadingEl.style.display = 'none';
-
-            if (!data.ok) {
-                resultError.style.display = 'block';
-                resultError.textContent = data.error || 'Unable to fetch weather.';
-                return;
-            }
-
-            const w = data.weather;
-            const loc = data.location;
-
-            locEl.textContent = `${loc?.name || ''}${loc?.country ? ', ' + loc.country : ''}`.trim();
-            timeEl.textContent = w?.reported_at ? `Reported: ${new Date(w.reported_at).toLocaleString()}` : '';
-
-            tempEl.textContent = (w.temperature ?? '-') + ' °C';
-            humEl.textContent = (w.humidity ?? '-') + ' %';
-            windEl.textContent = (w.wind_speed ?? '-') + ' m/s';
-            descEl.textContent = w.description || '-';
-
-            if (w.icon) {
-                iconEl.src = `https://openweathermap.org/img/wn/${w.icon}@2x.png`;
-            } else {
-                iconEl.removeAttribute('src');
-            }
-
-            resultWrap.style.display = 'block';
-        } catch (err) {
-            loadingEl.style.display = 'none';
-            resultError.style.display = 'block';
-            resultError.textContent = 'Network error. Please try again.';
-        }
-    });
-</script>
