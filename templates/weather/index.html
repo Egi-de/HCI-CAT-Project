@@ -9,23 +9,31 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Syne:wght@700;800&display=swap"
         rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'weather/app.css' %}" />
+
     <style>
+        /* Guest page keeps its own layout styles.
+           Theme colors come from static/weather/app.css via CSS variables. */
+
+        /* Ensure index page uses the same variable selectors as app.css */
+        :root[data-theme='dark'] {
+            /* fallback; real values are in app.css */
+        }
+
+        :root[data-theme='light'] {
+            /* fallback; real values are in app.css */
+        }
+
+
         :root {
-            --bg: #07091a;
-            --surface: rgba(255, 255, 255, .04);
-            --surface2: rgba(255, 255, 255, .07);
-            --border: rgba(255, 255, 255, .09);
-            --text: #e8ecf5;
-            --dim: #6b7a99;
-            --accent: #38bdf8;
-            --accent2: #818cf8;
-            --success: #34d399;
-            --error: #f87171;
             --r: 14px;
             --rs: 8px;
             --font-h: 'Syne', sans-serif;
             --font: 'DM Sans', sans-serif;
         }
+
+
 
         *,
         *::before,
@@ -41,11 +49,15 @@
 
         body {
             font-family: var(--font);
-            background: var(--bg);
-            color: var(--text);
+            background: var(--bg) !important;
+            color: var(--text) !important;
             min-height: 100vh;
-            overflow-x: hidden
+            overflow-x: hidden;
+            background: var(--bg);
+            background-color: var(--bg)
         }
+
+
 
         .bg-wrap {
             position: fixed;
@@ -395,9 +407,11 @@
             padding: 1.6rem;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
+            gap: 1rem;
             border-bottom: 1px solid var(--border)
         }
+
 
         .res-loc h2 {
             font-family: var(--font-h);
@@ -418,12 +432,28 @@
             filter: drop-shadow(0 0 12px rgba(56, 189, 248, .3))
         }
 
+        .res-icon-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: .35rem;
+            min-width: 120px;
+            flex-shrink: 0
+        }
+
+        .res-icon {
+            object-fit: contain;
+        }
+
+
         .res-cond {
             font-size: .95rem;
             color: var(--accent2);
             margin-top: .25rem;
             text-align: center
         }
+
 
         .result-metrics {
             display: grid;
@@ -610,7 +640,6 @@
 <body>
 
     <div class="bg-wrap">
-        <div class="orb o1"></div>
         <div class="orb o2"></div>
         <div class="orb o3"></div>
     </div>
@@ -621,12 +650,15 @@
             WeatherSense
         </div>
         <div class="nav-links">
+            <button type="button" class="btn-admin" data-theme-toggle style="cursor:pointer;">Toggle theme</button>
             <a href="#search">Search</a>
+
             <a href="#features">Features</a>
             <a href="{% url 'admin-login' %}" class="btn-admin">Admin Portal →</a>
 
         </div>
     </nav>
+
 
     <section class="hero" id="search">
         <div class="hero-badge"><span class="badge-dot"></span>Powered by OpenWeather API</div>
@@ -686,7 +718,7 @@
                     <div class="coords" id="r-coords"></div>
                 </div>
                 <div class="res-icon-wrap">
-                    <img class="res-icon" id="r-icon" src="" alt="Weather icon" style="display:none" />
+                    <img class="res-icon" id="r-icon" src="" alt="Weather icon" style="display:block" />
                     <div class="res-cond" id="r-cond"></div>
                 </div>
 
@@ -746,6 +778,8 @@
                 href="/admin/">Admin Portal</a></p>
     </footer>
 
+    <script src="{% static 'weather/theme.js' %}" defer></script>
+
     <script>
         function switchTab(t) {
             document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
@@ -792,17 +826,42 @@
 
                 document.getElementById('r-city').textContent = loc?.name || '—';
                 document.getElementById('r-country').textContent = loc?.country ? '📌 ' + loc.country : '';
-                document.getElementById('r-coords').textContent = loc?.coord ? `${loc.coord.lat}°, ${loc.coord.lon}°` : '';
-                if (w?.icon) {
-                    const iconUrl = `https://openweathermap.org/img/wn/${w.icon}@2x.png`;
-                    const iconEl = document.getElementById('r-icon');
-                    iconEl.src = iconUrl;
-                    iconEl.alt = w?.description ? `Weather: ${w.description}` : 'Weather icon';
-                    iconEl.style.display = '';
+                const coordsEl = document.getElementById('r-coords');
+                const lat = loc?.coord?.lat;
+                const lon = loc?.coord?.lon;
+                if (lat == null || lon == null) {
+                    coordsEl.textContent = '';
                 } else {
-                    document.getElementById('r-icon').src = '';
-                    document.getElementById('r-icon').style.display = 'none';
+                    coordsEl.textContent = `${lat}°, ${lon}°`;
                 }
+                const iconEl = document.getElementById('r-icon');
+                const iconCode = (w?.icon || '').trim();
+
+                // Always show the icon container when we have an icon code.
+                if (iconCode) {
+                    iconEl.style.display = '';
+                    iconEl.alt = w?.description ? `Weather: ${w.description}` : 'Weather icon';
+
+                    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+                    // Always start by showing an image.
+                    iconEl.src = iconUrl;
+
+                    iconEl.onerror = () => {
+                        // Prefer a local static icon.
+                        const localFallbackUrl = '{% static "weather/images (1).png" %}';
+                        iconEl.onerror = null;
+                        iconEl.src = localFallbackUrl;
+                    };
+
+                    // Extra guard: if for any reason the remote icon never loads,
+                    // ensure the element isn't hidden after the first attempt.
+                    iconEl.style.opacity = '1';
+                } else {
+                    iconEl.src = '';
+                    iconEl.style.display = 'none';
+                }
+
 
                 document.getElementById('r-cond').textContent = w?.description || '-';
 

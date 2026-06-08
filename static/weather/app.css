@@ -2,6 +2,12 @@
 
 :root {
   --bg: #0b1020;
+
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b1020;
+
   --panel: rgba(18, 26, 51, 0.85);
   --text: #e8ecff;
   --muted: #aab3d6;
@@ -13,6 +19,21 @@
   --shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
   --radius: 18px;
 }
+
+:root[data-theme='light'] {
+  --bg: #eef2ff;
+  --panel: rgba(255, 255, 255, 0.85);
+  --text: #0b1020;
+  --muted: #4b5563;
+  --accent: #2563eb;
+  --accent2: #4f46e5;
+  --success: #059669;
+  --danger: #dc2626;
+  --border: rgba(10, 15, 35, 0.10);
+  --shadow: 0 18px 60px rgba(2, 6, 23, 0.12);
+  --radius: 18px;
+}
+
 
 * {
   box-sizing: border-box;
@@ -301,9 +322,45 @@ input:focus {
   margin-top: 14px;
 }
 
+/* Flex variant for dashboard cards */
+.admin-kpis--flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.admin-kpis--flex>.admin-tile {
+  flex: 1 1 320px;
+  min-width: 280px;
+}
+
+.admin-kpi-number {
+  font-size: 2.2rem;
+  font-weight: 900;
+}
+
+.admin-flex-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.admin-card-compact {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
 @media (max-width: 860px) {
   .admin-kpis {
     grid-template-columns: 1fr;
+  }
+
+  .admin-kpis--flex {
+    flex-direction: column;
+  }
+
+  .admin-flex-cards {
+    flex-direction: column;
   }
 }
 

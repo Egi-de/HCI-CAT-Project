@@ -4,10 +4,12 @@
 
 {% block content %}
 <div class="auth-wrap" style="max-width:520px;margin:2rem auto;">
-    <div class="search-card" style="padding:2rem;">
-        <h2 style="font-family: var(--font-h); margin-bottom: .75rem;">Administrator Login</h2>
-        <p style="color: var(--dim); margin-bottom: 1.25rem; font-size:.95rem;">Authenticate to access the administrator
-            dashboard.</p>
+    <div class="card" style="padding:2rem;">
+        <h2 class="card-title" style="font-family: var(--font-h); margin-bottom: .75rem;">Administrator Login</h2>
+        <p style="color: var(--muted); margin-bottom: 1.25rem; font-size:.95rem;">
+            Authenticate to access the administrator dashboard.
+        </p>
+
 
         <form method="post" novalidate>
             {% csrf_token %}
@@ -30,8 +32,9 @@
 
             <button type="submit" class="btn-go" style="margin-top:1.25rem;">Login →</button>
 
-            <div style="margin-top:1rem; color: var(--dim); font-size:.9rem;">
-                No admin account? <a href="{% url 'admin-signup' %}" style="color: var(--accent);">Create one</a>
+            <div style="margin-top:1rem; color: var(--muted); font-size:.9rem; text-align:center;">
+                No admin account? <a href="{% url 'admin-signup' %}"
+                    style="color: var(--accent); text-decoration: none;">Create one</a>
             </div>
         </form>
     </div>

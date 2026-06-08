@@ -16,10 +16,10 @@
             </div>
         </div>
 
-        <div class="admin-kpis">
+        <div class="admin-kpis admin-kpis--flex">
             <div class="admin-tile">
-                <div style="font-size:2.2rem;font-weight:900;">{{ total_searches }}</div>
-                <div class="admin-sub" style="margin-top:.4rem;">Total searches</div>
+                <div class="admin-kpi-number">{{ total_searches }}</div>
+                <div class="admin-sub">Total searches</div>
             </div>
 
             <div class="admin-tile">
@@ -40,9 +40,9 @@
         <div class="admin-sub" style="margin-top:1.2rem; font-size:.9rem; margin-bottom:.7rem;">Most common
             conditions</div>
 
-        <div class="admin-grid-auto">
+        <div class="admin-flex-cards">
             {% for c in top_conditions|slice:':10' %}
-            <div class="admin-tile" style="padding:16px;">
+            <div class="admin-tile admin-card-compact">
                 <div class="admin-accent" style="font-size:1.1rem;">{{ c.condition }}</div>
                 <div style="margin-top:.4rem;font-weight:900;font-size:1.7rem;">{{ c.count }}</div>
             </div>

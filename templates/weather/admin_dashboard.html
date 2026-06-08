@@ -16,10 +16,10 @@
             </div>
         </div>
 
-        <div class="admin-kpis">
+        <div class="admin-kpis admin-kpis--flex">
             <div class="admin-tile">
-                <div style="font-size:2.2rem;font-weight:800;">{{ total_searches }}</div>
-                <div class="admin-sub" style="margin-top:.4rem;">Total searches</div>
+                <div class="admin-kpi-number">{{ total_searches }}</div>
+                <div class="admin-sub">Total searches</div>
             </div>
 
             <div class="admin-tile">
@@ -39,9 +39,9 @@
 
         <div class="admin-sub" style="margin-top:1.2rem; font-size:.9rem; margin-bottom:.7rem;">Top weather
             conditions</div>
-        <div class="admin-grid-2">
+        <div class="admin-flex-cards">
             {% for c in top_conditions %}
-            <div class="admin-tile" style="padding:16px;">
+            <div class="admin-tile admin-card-compact">
                 <div class="admin-accent" style="font-size:1.1rem;">{{ c.condition }}</div>
                 <div style="margin-top:.4rem;font-weight:900;font-size:1.7rem;">{{ c.count }}</div>
             </div>
@@ -50,8 +50,9 @@
             {% endfor %}
         </div>
 
-        <div class="admin-grid-auto" style="margin-top:1.2rem;">
+        <div class="admin-flex-cards" style="margin-top:1.2rem;">
             <div class="admin-tile">
+
                 <div style="font-size:1.6rem;margin-bottom:.7rem;">📚</div>
                 <h3 style="margin:0 0 .35rem 0;">Search History</h3>
                 <p class="admin-sub" style="margin:0;">Review weather searches performed by users.</p>
