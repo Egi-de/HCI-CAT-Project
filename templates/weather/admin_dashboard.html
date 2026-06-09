@@ -4,17 +4,18 @@
 
 {% block content %}
 <div class="admin-wrap">
-    <div class="card" style="padding:1.6rem;">
+    <section class="admin-dashboard-hero card" aria-label="Admin dashboard summary">
         <div class="admin-head">
             <div>
-                <h2 style="margin:0;">Administrator Dashboard</h2>
+                <h2 class="admin-dashboard-title">Administrator Dashboard</h2>
                 <div class="admin-sub">Overview of system usage + quick links</div>
             </div>
-            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-                <a href="{% url 'admin-history' %}" class="btn-admin">View history</a>
+            <div class="admin-dashboard-cta">
+                <a href="{% url 'admin-history' %}" class="btn-admin btn-admin--primary">View history</a>
                 <a href="{% url 'admin-stats' %}" class="btn-admin">Usage stats</a>
             </div>
         </div>
+
 
         <div class="admin-kpis admin-kpis--flex">
             <div class="admin-tile">
@@ -65,6 +66,6 @@
                 <a href="{% url 'admin-stats' %}" class="btn-admin" style="margin-top:.9rem;">Open</a>
             </div>
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}

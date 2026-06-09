@@ -3,6 +3,10 @@
 :root {
   --bg: #0b1020;
 
+  /* Extra variables used by some templates/styles */
+  --dim: rgba(170, 179, 214, 0.95);
+  --surface: rgba(255, 255, 255, 0.03);
+  --error: #ff6b6b;
 }
 
 :root[data-theme='dark'] {
@@ -11,13 +15,17 @@
   --panel: rgba(18, 26, 51, 0.85);
   --text: #e8ecff;
   --muted: #aab3d6;
+  --dim: rgba(170, 179, 214, 0.95);
   --accent: #6aa6ff;
   --accent2: #818cf8;
   --success: #34d399;
   --danger: #ff6b6b;
+  --error: #ff6b6b;
   --border: rgba(255, 255, 255, 0.10);
   --shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
   --radius: 18px;
+
+  --surface: rgba(255, 255, 255, 0.03);
 }
 
 :root[data-theme='light'] {
@@ -25,14 +33,19 @@
   --panel: rgba(255, 255, 255, 0.85);
   --text: #0b1020;
   --muted: #4b5563;
+  --dim: rgba(75, 85, 99, 0.95);
   --accent: #2563eb;
   --accent2: #4f46e5;
   --success: #059669;
   --danger: #dc2626;
+  --error: #dc2626;
   --border: rgba(10, 15, 35, 0.10);
   --shadow: 0 18px 60px rgba(2, 6, 23, 0.12);
   --radius: 18px;
+
+  --surface: rgba(10, 15, 35, 0.03);
 }
+
 
 
 * {
@@ -195,6 +208,8 @@ label {
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
   outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .auth-wrap input:focus,
@@ -206,7 +221,11 @@ label {
 
 
 
+
+
+
 .btn {
+
   width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
@@ -311,7 +330,60 @@ label {
   margin: 1.6rem auto;
 }
 
+/* Dashboard standout header */
+.admin-dashboard-hero {
+  padding: 1.75rem 1.6rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-dashboard-hero::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background:
+    radial-gradient(900px 240px at 10% 0%, rgba(106, 166, 255, 0.35), transparent 55%),
+    radial-gradient(700px 220px at 95% 10%, rgba(129, 140, 248, 0.30), transparent 55%);
+  pointer-events: none;
+}
+
+.admin-dashboard-hero>* {
+  position: relative;
+}
+
+.admin-dashboard-title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.admin-dashboard-cta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-kpis .admin-tile {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+}
+
+.admin-kpis .admin-kpi-number {
+  text-shadow: 0 10px 30px rgba(106, 166, 255, 0.18);
+}
+
+.admin-flex-cards .admin-tile {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+}
+
+:root[data-theme='light'] .admin-kpis .admin-tile,
+:root[data-theme='light'] .admin-flex-cards .admin-tile {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.06), rgba(255, 255, 255, 0.6));
+}
+
 .admin-head {
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -412,12 +484,33 @@ label {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .btn-admin:hover {
   border-color: rgba(106, 166, 255, 0.85);
   background: rgba(106, 166, 255, 0.08);
+  transform: translateY(-1px);
 }
+
+/* Stronger CTA for dashboard */
+.btn-admin--primary {
+  background: linear-gradient(135deg, rgba(106, 166, 255, 0.95), rgba(129, 140, 248, 0.55));
+  border-color: rgba(106, 166, 255, 0.75);
+  color: #071026;
+  box-shadow: 0 14px 38px rgba(106, 166, 255, 0.18);
+}
+
+:root[data-theme='light'] .btn-admin--primary {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(79, 70, 229, 0.6));
+  color: #ffffff;
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.22);
+}
+
+.btn-admin--primary:hover {
+  box-shadow: 0 20px 50px rgba(106, 166, 255, 0.28);
+}
+
 
 .admin-grid-2 {
   display: grid;
