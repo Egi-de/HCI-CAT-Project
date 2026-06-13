@@ -139,18 +139,71 @@ body {
   gap: 10px;
 }
 
+.nav-items {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-toggle {
+  display: none;
+}
+
+.nav-toggle-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
 @media (max-width: 520px) {
   .header-inner {
     gap: 12px;
   }
 
-  .nav {
-    justify-content: flex-end;
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* Ensure visibility even if other rules conflict */
+  .nav-toggle {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .nav-items {
+    display: none;
+    width: 100%;
+  }
+
+  .nav-items.is-open {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .nav-link {
-    padding: 8px 8px;
+    padding: 8px 10px;
     font-size: 13px;
+  }
+
+  .container {
+    width: calc(100% - 16px);
+  }
+}
+
+/* Guest landing page (templates/weather/index.html) uses its own <style>,
+   so we add a small baseline here for consistent mobile layout. */
+@media (max-width: 520px) {
+  footer {
+    padding: 2rem 1rem;
   }
 }
 
