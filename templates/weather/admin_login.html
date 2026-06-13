@@ -1,43 +1,37 @@
-{% extends 'weather/base.html' %}
+{% extends 'weather/base.html' %} {% block title %}Administrator Login —
+WeatherSense{% endblock %} {% block content %}
+<div class="auth-wrap auth-login-wrap">
+  <div class="card auth-login-card">
+    <h2 class="card-title auth-login-title">Administrator Login</h2>
+    <p class="auth-login-desc">
+      Authenticate to access the administrator dashboard.
+    </p>
 
-{% block title %}Administrator Login — WeatherSense{% endblock %}
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="inp-group auth-login-fields">
+        <div class="inp-group">
+          <label class="inp-label" for="id_username">Username</label>
+          {{ form.username }} {% if form.username.errors %}
+          <div class="auth-error">{{ form.username.errors }}</div>
+          {% endif %}
+        </div>
 
-{% block content %}
-<div class="auth-wrap" style="max-width:520px;margin:2rem auto;">
-    <div class="card" style="padding:2rem;">
-        <h2 class="card-title" style="font-family: var(--font-h); margin-bottom: .75rem;">Administrator Login</h2>
-        <p style="color: var(--muted); margin-bottom: 1.25rem; font-size:.95rem;">
-            Authenticate to access the administrator dashboard.
-        </p>
+        <div class="inp-group">
+          <label class="inp-label" for="id_password">Password</label>
+          {{ form.password }} {% if form.password.errors %}
+          <div class="auth-error">{{ form.password.errors }}</div>
+          {% endif %}
+        </div>
+      </div>
 
-
-        <form method="post" novalidate>
-            {% csrf_token %}
-            <div class="inp-group" style="gap:.7rem;">
-                <div class="inp-group">
-                    <label class="inp-label" for="id_username">Username</label>
-                    {{ form.username }}
-                    {% if form.username.errors %}
-                    <div style="color: var(--error); font-size:.85rem;">{{ form.username.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="inp-group">
-                    <label class="inp-label" for="id_password">Password</label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                    <div style="color: var(--error); font-size:.85rem;">{{ form.password.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <button type="submit" class="btn" style="margin-top:1.25rem;">Login →</button>
-            <!-- 
+      <button type="submit" class="btn auth-login-btn">Login →</button>
+      <!-- 
             <div style="margin-top:1rem; color: var(--muted); font-size:.9rem; text-align:center;">
                 No admin account? <a href="{% url 'admin-signup' %}"
                     style="color: var(--accent); text-decoration: none;">Create one</a>
             </div> -->
-        </form>
-    </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
